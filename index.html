@@ -432,68 +432,103 @@
     if (sidebar) sidebar.textContent = Object.keys(roomState).length;
   }
 
-  // ─── Task Panel ──────────────────────────────────────────────────
-  function populateRoomSelect() {
-    const sel = document.getElementById('task-room-sel');
-    const allRooms = [];
-    FLOORS.forEach(f => f.rooms.forEach(r => allRooms.push(r.n)));
-    allRooms.sort((a, b) => parseInt(a) - parseInt(b)).forEach(n => {
-      const opt = document.createElement('option');
-      opt.value = n; opt.textContent = 'Room ' + n;
-      sel.appendChild(opt);
-    });
-  }
+   // ─── Task Panel ──────────────────────────────────────────────────
 
-  function renderTasks() {
-    const list = document.getElementById('task-list');
-    list.innerHTML = '';
-    const pending = tasks.filter(t => !t.done);
-    const done    = tasks.filter(t =>  t.done);
-    [...pending, ...done].forEach(t => {
-      const el = document.createElement('div');
-      el.className = 'task-item' + (t.done ? ' done-item' : '');
-      el.setAttribute('role', 'listitem');
-      const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
-      const badgeLabel = t.done ? 'Done' : (t.priority === 'urgent' ? 'Urgent' : 'Normal');
-      el.innerHTML = `
-        <span class="task-badge ${badgeClass}">${badgeLabel}</span>
-        <div class="task-body">
-          <div class="task-room-num">ROOM ${t.room}</div>
-          <div class="task-desc-main">${t.desc}</div>
-          <div class="task-zh">中文：${t.zh}</div>
-        </div>
-        <div class="task-assign">${t.assign}</div>
-        <div class="task-actions">
-          <button class="btn btn-ghost btn-sm" onclick="toggleDone(${t.id})" aria-label="${t.done ? 'Reopen task' : 'Mark as done'}">
-            ${t.done ? 'Reopen' : '✓ Done'}
-          </button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteTask(${t.id})" aria-label="Delete task" style="color:var(--maint-text)">✕</button>
-        </div>
-      `;
-      list.appendChild(el);
-    });
-    const sidebar = document.getElementById('sidebar-count-tasks');
-    if (sidebar) sidebar.textContent = pending.length;
-  }
+   async function translateText(text, sourceLang = 'en', targetLang = 'zh') {
+     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
+     try {
+       const response = await fetch(url);
+       const data = await response.json();
+       if (data.responseStatus === 200) {
+         return data.responseData.translatedText;
+       } else {
+         console.warn('Translation failed:', data);
+         return null;
+       }
+     } catch (error) {
+       console.error('Translation error:', error);
+       return null;
+     }
+   }
 
-  function addTask() {
-    const room     = document.getElementById('task-room-sel').value;
-    const descEn   = document.getElementById('task-desc-en').value.trim();
-    const descZh   = document.getElementById('task-desc-zh').value.trim();
-    const assign   = document.getElementById('task-assign-sel').value;
-    const priority = document.getElementById('task-priority-sel').value;
-    if (!room || !descEn) {
-      alert('Please select a room and enter a task description.');
-      return;
-    }
-    const zh = descZh || '【待翻译】' + descEn;
-    tasks.unshift({ id: nextTaskId++, room, desc: descEn, zh, assign, priority, done: false });
-    document.getElementById('task-desc-en').value = '';
-    document.getElementById('task-desc-zh').value = '';
-    document.getElementById('task-room-sel').value = '';
-    renderTasks();
-    renderBridge();
-  }
+   function populateRoomSelect() {
+     const sel = document.getElementById('task-room-sel');
+     const allRooms = [];
+     FLOORS.forEach(f => f.rooms.forEach(r => allRooms.push(r.n)));
+     allRooms.sort((a, b) => parseInt(a) - parseInt(b)).forEach(n => {
+       const opt = document.createElement('option');
+       opt.value = n; opt.textContent = 'Room ' + n;
+       sel.appendChild(opt);
+     });
+   }
+
+   function renderTasks() {
+     const list = document.getElementById('task-list');
+     list.innerHTML = '';
+     const pending = tasks.filter(t => !t.done);
+     const done    = tasks.filter(t =>  t.done);
+     [...pending, ...done].forEach(t => {
+       const el = document.createElement('div');
+       el.className = 'task-item' + (t.done ? ' done-item' : '');
+       el.setAttribute('role', 'listitem');
+       const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
+       const badgeLabel = t.done ? 'Done' : (t.priority === 'urgent' ? 'Urgent' : 'Normal');
+       const isTranslating = t.zh && t.zh.startsWith('【待翻译】');
+       el.innerHTML = `
+         <span class="task-badge ${badgeClass}">${badgeLabel}</span>
+         <div class="task-body">
+           <div class="task-room-num">ROOM ${t.room}</div>
+           <div class="task-desc-main">${t.desc}</div>
+           ${t.zh ? `<div class="task-zh">中文：${isTranslating ? '翻译中...' : t.zh}</div>` : ''}
+         </div>
+         <div class="task-assign">${t.assign}</div>
+         <div class="task-actions">
+           <button class="btn btn-ghost btn-sm" onclick="toggleDone(${t.id})" aria-label="${t.done ? 'Reopen task' : 'Mark as done'}">
+             ${t.done ? 'Reopen' : '✓ Done'}
+           </button>
+           <button class="btn btn-ghost btn-sm" onclick="deleteTask(${t.id})" aria-label="Delete task" style="color:var(--maint-text)">✕</button>
+         </div>
+       `;
+       list.appendChild(el);
+     });
+     const sidebar = document.getElementById('sidebar-count-tasks');
+     if (sidebar) sidebar.textContent = pending.length;
+   }
+
+   function addTask() {
+     const room     = document.getElementById('task-room-sel').value;
+     const descEn   = document.getElementById('task-desc-en').value.trim();
+     const descZh   = document.getElementById('task-desc-zh').value.trim();
+     const assign   = document.getElementById('task-assign-sel').value;
+     const priority = document.getElementById('task-priority-sel').value;
+     if (!room || !descEn) {
+       alert('Please select a room and enter a task description.');
+       return;
+     }
+
+     const zh = descZh || '【待翻译】' + descEn;
+     const newTask = { id: nextTaskId++, room, desc: descEn, zh, assign, priority, done: false };
+
+     tasks.unshift(newTask);
+     renderTasks();
+
+     if (!descZh) {
+       translateText(descEn).then(translated => {
+         if (translated) {
+           newTask.zh = translated;
+         } else {
+           newTask.zh = descEn;
+         }
+         renderTasks();
+         renderBridge();
+       });
+     }
+
+     document.getElementById('task-desc-en').value = '';
+     document.getElementById('task-desc-zh').value = '';
+     document.getElementById('task-room-sel').value = '';
+     renderBridge();
+   }
 
   function toggleDone(id) {
     const t = tasks.find(x => x.id === id);
@@ -518,37 +553,38 @@
     renderBridge();
   }
 
-  function renderBridge() {
-    const list = document.getElementById('bridge-list');
-    list.innerHTML = '';
-    if (tasks.length === 0) {
-      list.innerHTML = '<p style="color:var(--text-tertiary);font-size:13px;padding:1rem 0;">No tasks yet — add some in the Task Assignment panel.</p>';
-      return;
-    }
-    tasks.forEach(t => {
-      const isEn = displayLang === 'en';
-      const el   = document.createElement('div');
-      el.className = 'bridge-card';
-      el.setAttribute('role', 'listitem');
-      const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
-      const badgeLabel = t.done
-        ? (isEn ? 'Done'   : '已完成')
-        : (t.priority === 'urgent' ? (isEn ? 'Urgent' : '紧急') : (isEn ? 'Normal' : '普通'));
-      const mainText = isEn ? t.desc : t.zh;
-      const subText  = isEn ? ('中文：' + t.zh) : ('English: ' + t.desc);
-      const roomLabel = isEn ? 'ROOM ' : '房间 ';
-      el.innerHTML = `
-        <span class="task-badge ${badgeClass}">${badgeLabel}</span>
-        <div class="bridge-info">
-          <div class="bridge-room">${roomLabel}${t.room}</div>
-          <div class="bridge-main">${mainText}</div>
-          <div class="bridge-sub">${subText}</div>
-        </div>
-        <div class="task-assign">${t.assign}</div>
-      `;
-      list.appendChild(el);
-    });
-  }
+   function renderBridge() {
+     const list = document.getElementById('bridge-list');
+     list.innerHTML = '';
+     if (tasks.length === 0) {
+       list.innerHTML = '<p style="color:var(--text-tertiary);font-size:13px;padding:1rem 0;">No tasks yet — add some in the Task Assignment panel.</p>';
+       return;
+     }
+     tasks.forEach(t => {
+       const isEn = displayLang === 'en';
+       const el   = document.createElement('div');
+       el.className = 'bridge-card';
+       el.setAttribute('role', 'listitem');
+       const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
+       const badgeLabel = t.done
+         ? (isEn ? 'Done'   : '已完成')
+         : (t.priority === 'urgent' ? (isEn ? 'Urgent' : '紧急') : (isEn ? 'Normal' : '普通'));
+       const isTranslating = t.zh && t.zh.startsWith('【待翻译】');
+       const mainText = isEn ? t.desc : (isTranslating ? '翻译中...' : t.zh);
+       const subText  = isEn ? ('中文：' + (isTranslating ? '翻译中...' : t.zh)) : ('English: ' + t.desc);
+       const roomLabel = isEn ? 'ROOM ' : '房间 ';
+       el.innerHTML = `
+         <span class="task-badge ${badgeClass}">${badgeLabel}</span>
+         <div class="bridge-info">
+           <div class="bridge-room">${roomLabel}${t.room}</div>
+           <div class="bridge-main">${mainText}</div>
+           <div class="bridge-sub">${subText}</div>
+         </div>
+         <div class="task-assign">${t.assign}</div>
+       `;
+       list.appendChild(el);
+     });
+   }
 
   // ─── Init ────────────────────────────────────────────────────────
   buildRooms();
