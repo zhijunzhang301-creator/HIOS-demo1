@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HIOS — Hotel Internal Operating System · TownePlace Suites Hamilton</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- TOP NAV -->
+  <nav class="topnav" role="navigation">
+    <div class="nav-left">
+      <div class="nav-logo-mark">H</div>
+      <div>
+        <div class="nav-title">HIOS</div>
+        <div class="nav-subtitle">TownePlace Suites Hamilton · Room Status</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge">14 May 2026 · 10:34</span>
+      <span class="nav-date" id="nav-date">—</span>
+    </div>
+  </nav>
+
+  <div class="main-body">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" role="complementary">
+      <p class="sidebar-section-label">Operations</p>
+      <button class="nav-item active" onclick="switchPanel('rooms', this)" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Room Board
+        <span class="nav-count" id="sidebar-count-rooms">125</span>
+      </button>
+      <button class="nav-item" onclick="switchPanel('tasks', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+        Task Assignment
+        <span class="nav-count" id="sidebar-count-tasks">0</span>
+      </button>
+      <button class="nav-item" onclick="switchPanel('bridge', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+        </svg>
+        Translation Bridge
+      </button>
+
+      <p class="sidebar-section-label" style="margin-top:1.5rem;">Coming Soon</p>
+      <button class="nav-item" style="opacity:0.45;cursor:default;" disabled>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </button>
+      <button class="nav-item" style="opacity:0.45;cursor:default;" disabled>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07"/>
+        </svg>
+        AI Summaries
+      </button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="content" role="main">
+
+      <!-- ══ ROOM BOARD PANEL ══ -->
+      <section id="panel-rooms" class="panel active" aria-label="Room Status Board">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Room Status Board</h1>
+            <p class="page-subtitle">Click any room to cycle its status · 125 rooms · Live view</p>
+          </div>
+        </div>
+
+        <div class="stats-row" role="region" aria-label="Summary statistics">
+          <div class="stat-card clean">
+            <div class="stat-label"><span class="stat-dot"></span>Clean / Ready</div>
+            <div class="stat-val" id="cnt-clean">—</div>
+          </div>
+          <div class="stat-card dirty">
+            <div class="stat-label"><span class="stat-dot"></span>Dirty / Vacant</div>
+            <div class="stat-val" id="cnt-dirty">—</div>
+          </div>
+          <div class="stat-card occ">
+            <div class="stat-label"><span class="stat-dot"></span>Occupied</div>
+            <div class="stat-val" id="cnt-occ">—</div>
+          </div>
+          <div class="stat-card co">
+            <div class="stat-label"><span class="stat-dot"></span>Check-out</div>
+            <div class="stat-val" id="cnt-co">—</div>
+          </div>
+          <div class="stat-card maint">
+            <div class="stat-label"><span class="stat-dot"></span>Out of Order</div>
+            <div class="stat-val" id="cnt-maint">—</div>
+          </div>
+        </div>
+
+        <div id="floors-container"></div>
+
+        <p class="hint-text">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Click any room card to cycle: Clean → Dirty → Occupied → Check-out → Maintenance
+          &nbsp;·&nbsp; 🚩 = Bonvoy member
+        </p>
+      </section>
+
+      <!-- ══ TASK PANEL ══ -->
+      <section id="panel-tasks" class="panel" aria-label="Task Assignment">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Task Assignment</h1>
+            <p class="page-subtitle">Assign, track, and complete housekeeping tasks</p>
+          </div>
+        </div>
+
+        <div class="task-toolbar">
+          <div class="toolbar-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New task
+          </div>
+          <div class="add-task-row">
+            <select id="task-room-sel" aria-label="Select room">
+              <option value="">Select room</option>
+            </select>
+            <input type="text" id="task-desc-en" placeholder="Task in English..." aria-label="Task description in English" />
+            <input type="text" id="task-desc-zh" placeholder="中文描述（可选）" aria-label="Task description in Chinese (optional)" />
+            <select id="task-assign-sel" aria-label="Assign to">
+              <option value="Mei">Mei (Housekeeping)</option>
+              <option value="Lin">Lin (Housekeeping)</option>
+              <option value="Front Desk">Front Desk</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+            <select id="task-priority-sel" aria-label="Priority">
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgent</option>
+            </select>
+            <button class="btn btn-primary" onclick="addTask()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add task
+            </button>
+          </div>
+        </div>
+
+        <div class="task-list" id="task-list" role="list" aria-label="Task list"></div>
+      </section>
+
+      <!-- ══ BRIDGE PANEL ══ -->
+      <section id="panel-bridge" class="panel" aria-label="Multilingual Translation Bridge">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Translation Bridge</h1>
+            <p class="page-subtitle">Auto-translated task cards — EN ↔ 中文</p>
+          </div>
+        </div>
+
+        <div class="lang-switcher" role="group" aria-label="Language selection">
+          <button class="lang-btn active" id="btn-en" onclick="setLang('en')" aria-pressed="true">🇬🇧 English (Front Desk)</button>
+          <button class="lang-btn" id="btn-zh" onclick="setLang('zh')" aria-pressed="false">🇨🇳 中文 (保洁)</button>
+        </div>
+
+        <div id="bridge-list" role="list" aria-label="Translated task list"></div>
+
+        <div class="bridge-hint">
+          💡 Staff switches to their language once — every task card updates automatically. No typing needed; just tap to confirm completion.
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <span>HIOS · TownePlace Suites Hamilton · Current Room Status Report · 14May26 10:34</span>
+    <span style="font-family:'DM Mono',monospace;">125 Total Rooms</span>
+  </footer>
+
+</div>
+
+<script>
+  // ─── Status Config ───────────────────────────────────────────────
+  const STATUS_CYCLE  = ['clean', 'dirty', 'occupied', 'checkout', 'maintenance'];
+  const STATUS_LABELS = {
+    clean:       'Ready',
+    dirty:       'Dirty',
+    occupied:    'Occupied',
+    checkout:    'Check-out',
+    maintenance: 'Out of Order'
+  };
+
+  // ─── Room Data (sourced from 14May26 10:34 Current Room Status Report) ────
+  // Status key:
+  //   clean       = VACANT READY
+  //   dirty       = VACANT DIRTY
+  //   occupied    = OCCUPIED DIRTY (staying)
+  //   checkout    = OCCUPIED DIRTY (C/O) — checking out today
+  //   maintenance = OUT OF ORDER
+  // flag = true   = Marriott Bonvoy member (*)
+
+  const FLOORS = [
+    { label: '1st Floor — Rooms 101–117', rooms: [
+      { n: '101', s: 'checkout',    flag: false }, // STKT OCC DIRTY C/O  THOMAS/RHIANNON
+      { n: '102', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      BECHARD/BURKE
+      { n: '103', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '104', s: 'occupied',    flag: false }, // STKT OCC DIRTY      POOLE/VINCENT
+      { n: '105', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      CHEESMAN/SARAH
+      { n: '106', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      DELAY/MICHAEL
+      { n: '107', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '108', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      DELYSER/HUNTER
+      { n: '109', s: 'checkout',    flag: false }, // STKT OCC DIRTY C/O  MARCOTTE/STACY
+      { n: '110', s: 'occupied',    flag: false }, // STKT OCC DIRTY      PARON/DIANNE
+      { n: '111', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      THENG/SUSANTI
+      { n: '112', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      FEKETE/ROBERT
+      { n: '113', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      HEATH/TRISTIN
+      { n: '114', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  JARDES/EMILY
+      { n: '115', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      ATKINS/CECIL
+      { n: '116', s: 'maintenance', flag: false }, // STKT OUT OF ORDER
+      { n: '117', s: 'occupied',    flag: false }, // STKT OCC DIRTY      NTUNAGUZA/GABRIEL
+    ]},
+    { label: '2nd Floor — Rooms 201–235', rooms: [
+      { n: '201', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      WICKWIRE/STACY
+      { n: '202', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '203', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  GIFFORD/ALLISON
+      { n: '204', s: 'maintenance', flag: false }, // STKT OUT OF ORDER
+      { n: '205', s: 'occupied',    flag: false }, // STKT OCC DIRTY      BUSWOLD/JULIA
+      { n: '206', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '207', s: 'occupied',    flag: false }, // STKT OCC DIRTY      BUSWOLD/JULIA
+      { n: '208', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  CLAPP/SUZANNE
+      { n: '209', s: 'occupied',    flag: false }, // STKT OCC DIRTY      BUSWOLD/JULIA
+      { n: '210', s: 'occupied',    flag: false }, // STKT OCC DIRTY      DE-CAMARGO-NOGUEIRA/CARLO
+      { n: '211', s: 'occupied',    flag: false }, // STKT OCC DIRTY      HANSMA/PAUL
+      { n: '212', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '213', s: 'occupied',    flag: false }, // STKT OCC DIRTY      FIGUEROA/SANTIAGO/DANIEL
+      { n: '214', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '215', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      MORRIS-PAGE/ADAM
+      { n: '216', s: 'occupied',    flag: false }, // STKT OCC DIRTY      DHIMAN/MANTEJ
+      { n: '217', s: 'occupied',    flag: false }, // STKT OCC DIRTY      SMITH/CODY
+      { n: '218', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      CASSON/PHYLLIS
+      { n: '219', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  WILSON/MELODIE
+      { n: '220', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  BEANE/JARETT
+      { n: '221', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      BAH/VERONIKA
+      { n: '222', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '223', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      SILVEIRA/DANIEL
+      { n: '224', s: 'checkout',    flag: false }, // STKT OCC DIRTY C/O  XIAO/YANHAI
+      { n: '225', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      OHALLORAN/SHAWN
+      { n: '226', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      DAROGA/RUSTOM
+      { n: '227', s: 'checkout',    flag: false }, // STQQ OCC DIRTY C/O  HOLLOWAY/ROSE
+      { n: '228', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  SYEDA/MUJAHIDA
+      { n: '229', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  RECOLLET/ASHLEY
+      { n: '230', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  DALZIEL/MARISA
+      { n: '231', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '232', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      IMAI/BRIAN
+      { n: '233', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '234', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  PAYNE/CRAIG
+      { n: '235', s: 'occupied',    flag: true  }, // ONBR OCC DIRTY      MEEHAN/MICHAEL
+    ]},
+    { label: '3rd Floor — Rooms 236 + 301–316', rooms: [
+      { n: '236', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  PAYNE/CRAIG
+      { n: '301', s: 'occupied',    flag: false }, // STKT OCC DIRTY      MOGHE/ELAINE
+      { n: '302', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      ALFREIH/MODAR
+      { n: '303', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      SUKHEJA/KUNAL
+      { n: '304', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      PAWLOWSKI/SEAN
+      { n: '305', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      JARIYAL/MAHESH
+      { n: '306', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      NORDYK/HEATHER
+      { n: '307', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      BLOOMER/PATRICK
+      { n: '308', s: 'occupied',    flag: false }, // STKT OCC DIRTY      LOMBARDO/JOSEPH
+      { n: '309', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      VELHAL/CHETAN
+      { n: '310', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '311', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '312', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      KHARROUBI/HELAL
+      { n: '313', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  HAYI/GOODLUCK
+      { n: '314', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '315', s: 'checkout',    flag: false }, // STKT OCC DIRTY C/O  BROWNSTEIN/ROBERT
+      { n: '316', s: 'occupied',    flag: false }, // STKT OCC DIRTY      ZACHKEWICH/MARK
+      { n: '317', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      FOURNIER/MAXIME
+      { n: '318', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '319', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      BANAEIANZADEH/MOHAMMAD
+      { n: '320', s: 'clean',       flag: false }, // STQQ VACANT READY
+      { n: '321', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  WHITEFORD/BRANDON
+      { n: '322', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '323', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '324', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '325', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      COLLINS-HOBBS/TAMARA
+      { n: '326', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      BLASINI/EDWARD
+      { n: '327', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '328', s: 'occupied',    flag: false }, // STKT OCC DIRTY      TAYLOR-VAISEY/BOB
+      { n: '329', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  HAYI/GOODLUCK
+      { n: '330', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      GETTY/SEAN
+      { n: '331', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      CHANDY/MARK BOBBY
+      { n: '332', s: 'checkout',    flag: false }, // STQQ OCC DIRTY C/O  NURU/EBTISAM
+      { n: '333', s: 'checkout',    flag: true  }, // STQQ OCC DIRTY C/O  HAYI/GOODLUCK
+      { n: '334', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '335', s: 'checkout',    flag: true  }, // ONBR OCC DIRTY C/O  NORRIS/JEFFREY
+      { n: '336', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      TUGHAN/MICHAEL
+    ]},
+    { label: '4th Floor — Rooms 401–436', rooms: [
+      { n: '401', s: 'occupied',    flag: false }, // STKT OCC DIRTY      JHAJJ/SANDEEP/KAUR
+      { n: '402', s: 'occupied',    flag: false }, // STKT OCC DIRTY      PINDERA/RADEK
+      { n: '403', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '404', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      FLORES/NINO
+      { n: '405', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      JUSTO/NAPOLEON
+      { n: '406', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      NEFF/ADAMS
+      { n: '407', s: 'occupied',    flag: false }, // STKT OCC DIRTY      PEREZ/JORDAN
+      { n: '408', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '409', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      RAMAKER/CALVIN
+      { n: '410', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '411', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '412', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      JUSTIN/KELLY
+      { n: '413', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      EWALD/DAN
+      { n: '414', s: 'occupied',    flag: false }, // STKT OCC DIRTY      HASLAM/MIKE
+      { n: '415', s: 'occupied',    flag: true  }, // STKT OCC DIRTY      WALCEZ/JOSEPH
+      { n: '416', s: 'occupied',    flag: false }, // STKT OCC DIRTY      RAMALAYAM/HARINARAYANAN
+      { n: '417', s: 'occupied',    flag: false }, // STKT OCC DIRTY      MISCHITELLE/MICHAEL
+      { n: '418', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      WANG/SHIH
+      { n: '419', s: 'occupied',    flag: false }, // STKT OCC DIRTY      WARREN/LORI
+      { n: '420', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '421', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '422', s: 'clean',       flag: false }, // STQQ VACANT READY
+      { n: '423', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      HAYI/GOODLUCK
+      { n: '424', s: 'checkout',    flag: true  }, // STKT OCC DIRTY C/O  LI/ZHIHE
+      { n: '425', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY (blocked — future arrival 76117)
+      { n: '426', s: 'dirty',       flag: false }, // STKT VACANT DIRTY
+      { n: '427', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '428', s: 'clean',       flag: false }, // STKT VACANT READY
+      { n: '429', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '430', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      HARVEY/KEVIN
+      { n: '431', s: 'maintenance', flag: false }, // STQQ OUT OF ORDER
+      { n: '432', s: 'occupied',    flag: true  }, // STQQ OCC DIRTY      KOZERUBA/DAVID
+      { n: '433', s: 'dirty',       flag: false }, // STQQ VACANT DIRTY
+      { n: '434', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      PIANO/CECILIA
+      { n: '435', s: 'occupied',    flag: false }, // TOBR OCC DIRTY      ALBINO/MOSES
+      { n: '436', s: 'occupied',    flag: false }, // STQQ OCC DIRTY      EMPEY/LAURA
+    ]},
+  ];
+
+  // ─── State ───────────────────────────────────────────────────────
+  let roomState = {};
+  let tasks      = [];
+  let nextTaskId = 1;
+  let displayLang = 'en';
+
+  FLOORS.forEach(f => f.rooms.forEach(r => {
+    roomState[r.n] = { status: r.s, flag: r.flag || false };
+  }));
+
+  // ─── Nav Date ────────────────────────────────────────────────────
+  const dateEl = document.getElementById('nav-date');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-GB', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+
+  // ─── Panel switching ─────────────────────────────────────────────
+  function switchPanel(name, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => {
+      b.classList.remove('active');
+      b.removeAttribute('aria-current');
+    });
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.classList.add('active');
+    if (btn) { btn.classList.add('active'); btn.setAttribute('aria-current', 'page'); }
+  }
+
+  // ─── Room Board ──────────────────────────────────────────────────
+  function buildRooms() {
+    const container = document.getElementById('floors-container');
+    container.innerHTML = '';
+    FLOORS.forEach(f => {
+      const section = document.createElement('div');
+      section.className = 'floor-section';
+      section.innerHTML = `
+        <div class="floor-header">
+          <span class="floor-label">${f.label}</span>
+          <div class="floor-line"></div>
+        </div>
+        <div class="room-grid" role="list" aria-label="${f.label} rooms"></div>
+      `;
+      const grid = section.querySelector('.room-grid');
+      f.rooms.forEach(r => {
+        const st  = roomState[r.n];
+        const card = document.createElement('div');
+        card.className = 'room-card ' + st.status;
+        card.id        = 'room-' + r.n;
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('aria-label', `Room ${r.n}: ${STATUS_LABELS[st.status]}`);
+        card.setAttribute('tabindex', '0');
+        card.innerHTML = `
+          <div class="room-num">${r.n}</div>
+          <div class="room-status-label">${STATUS_LABELS[st.status]}</div>
+          ${st.flag ? '<span class="room-flag" title="Marriott Bonvoy Member" aria-label="Bonvoy member">🚩</span>' : ''}
+        `;
+        card.onclick    = () => cycleRoom(r.n);
+        card.onkeydown  = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleRoom(r.n); } };
+        grid.appendChild(card);
+      });
+      container.appendChild(section);
+    });
+    updateCounts();
+  }
+
+  function cycleRoom(num) {
+    const st  = roomState[num];
+    const idx = STATUS_CYCLE.indexOf(st.status);
+    st.status = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+    const card = document.getElementById('room-' + num);
+    card.className = 'room-card ' + st.status;
+    card.querySelector('.room-status-label').textContent = STATUS_LABELS[st.status];
+    card.setAttribute('aria-label', `Room ${num}: ${STATUS_LABELS[st.status]}`);
+    updateCounts();
+  }
+
+  function updateCounts() {
+    const counts = { clean: 0, dirty: 0, maintenance: 0, occupied: 0, checkout: 0 };
+    Object.values(roomState).forEach(r => counts[r.status]++);
+    document.getElementById('cnt-clean').textContent = counts.clean;
+    document.getElementById('cnt-dirty').textContent = counts.dirty;
+    document.getElementById('cnt-maint').textContent = counts.maintenance;
+    document.getElementById('cnt-occ').textContent   = counts.occupied;
+    document.getElementById('cnt-co').textContent    = counts.checkout;
+    const sidebar = document.getElementById('sidebar-count-rooms');
+    if (sidebar) sidebar.textContent = Object.keys(roomState).length;
+  }
+
+  // ─── Task Panel ──────────────────────────────────────────────────
+  function populateRoomSelect() {
+    const sel = document.getElementById('task-room-sel');
+    const allRooms = [];
+    FLOORS.forEach(f => f.rooms.forEach(r => allRooms.push(r.n)));
+    allRooms.sort((a, b) => parseInt(a) - parseInt(b)).forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n; opt.textContent = 'Room ' + n;
+      sel.appendChild(opt);
+    });
+  }
+
+  function renderTasks() {
+    const list = document.getElementById('task-list');
+    list.innerHTML = '';
+    const pending = tasks.filter(t => !t.done);
+    const done    = tasks.filter(t =>  t.done);
+    [...pending, ...done].forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'task-item' + (t.done ? ' done-item' : '');
+      el.setAttribute('role', 'listitem');
+      const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
+      const badgeLabel = t.done ? 'Done' : (t.priority === 'urgent' ? 'Urgent' : 'Normal');
+      el.innerHTML = `
+        <span class="task-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="task-body">
+          <div class="task-room-num">ROOM ${t.room}</div>
+          <div class="task-desc-main">${t.desc}</div>
+          <div class="task-zh">中文：${t.zh}</div>
+        </div>
+        <div class="task-assign">${t.assign}</div>
+        <div class="task-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleDone(${t.id})" aria-label="${t.done ? 'Reopen task' : 'Mark as done'}">
+            ${t.done ? 'Reopen' : '✓ Done'}
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteTask(${t.id})" aria-label="Delete task" style="color:var(--maint-text)">✕</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+    const sidebar = document.getElementById('sidebar-count-tasks');
+    if (sidebar) sidebar.textContent = pending.length;
+  }
+
+  function addTask() {
+    const room     = document.getElementById('task-room-sel').value;
+    const descEn   = document.getElementById('task-desc-en').value.trim();
+    const descZh   = document.getElementById('task-desc-zh').value.trim();
+    const assign   = document.getElementById('task-assign-sel').value;
+    const priority = document.getElementById('task-priority-sel').value;
+    if (!room || !descEn) {
+      alert('Please select a room and enter a task description.');
+      return;
+    }
+    const zh = descZh || '【待翻译】' + descEn;
+    tasks.unshift({ id: nextTaskId++, room, desc: descEn, zh, assign, priority, done: false });
+    document.getElementById('task-desc-en').value = '';
+    document.getElementById('task-desc-zh').value = '';
+    document.getElementById('task-room-sel').value = '';
+    renderTasks();
+    renderBridge();
+  }
+
+  function toggleDone(id) {
+    const t = tasks.find(x => x.id === id);
+    if (t) t.done = !t.done;
+    renderTasks();
+    renderBridge();
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(x => x.id !== id);
+    renderTasks();
+    renderBridge();
+  }
+
+  // ─── Bridge Panel ─────────────────────────────────────────────────
+  function setLang(lang) {
+    displayLang = lang;
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+    document.getElementById('btn-en').setAttribute('aria-pressed', lang === 'en');
+    document.getElementById('btn-zh').setAttribute('aria-pressed', lang === 'zh');
+    renderBridge();
+  }
+
+  function renderBridge() {
+    const list = document.getElementById('bridge-list');
+    list.innerHTML = '';
+    if (tasks.length === 0) {
+      list.innerHTML = '<p style="color:var(--text-tertiary);font-size:13px;padding:1rem 0;">No tasks yet — add some in the Task Assignment panel.</p>';
+      return;
+    }
+    tasks.forEach(t => {
+      const isEn = displayLang === 'en';
+      const el   = document.createElement('div');
+      el.className = 'bridge-card';
+      el.setAttribute('role', 'listitem');
+      const badgeClass = t.done ? 'badge-done' : (t.priority === 'urgent' ? 'badge-urgent' : 'badge-normal');
+      const badgeLabel = t.done
+        ? (isEn ? 'Done'   : '已完成')
+        : (t.priority === 'urgent' ? (isEn ? 'Urgent' : '紧急') : (isEn ? 'Normal' : '普通'));
+      const mainText = isEn ? t.desc : t.zh;
+      const subText  = isEn ? ('中文：' + t.zh) : ('English: ' + t.desc);
+      const roomLabel = isEn ? 'ROOM ' : '房间 ';
+      el.innerHTML = `
+        <span class="task-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="bridge-info">
+          <div class="bridge-room">${roomLabel}${t.room}</div>
+          <div class="bridge-main">${mainText}</div>
+          <div class="bridge-sub">${subText}</div>
+        </div>
+        <div class="task-assign">${t.assign}</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  // ─── Init ────────────────────────────────────────────────────────
+  buildRooms();
+  populateRoomSelect();
+  renderTasks();
+  renderBridge();
+</script>
+</body>
+</html>
